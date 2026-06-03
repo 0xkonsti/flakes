@@ -116,7 +116,7 @@ static int cmd_play(int argc, char** argv) {
 
             printf("legal move count for [%s]: %u\n", sq_in, legal.count);
             for (usize i = 0; i < legal.count; i++) {
-                printf("  %zu: ", i + 1);
+                printf("  %2zu: ", i + 1);
                 algebraic_from_move_print(legal.moves[i], &b);
                 printf("\n");
             }
