@@ -29,3 +29,5 @@ static inline void movelist_for_each(movelist_t const* movelist, void (*fn)(move
 }
 
 movelist_t get_legal_moves(chessboard_t* board, u8 square);
+
+movelist_t get_all_legal_moves(chessboard_t* board);

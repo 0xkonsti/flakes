@@ -167,21 +167,40 @@ static void _gen_pseudo_legal(chessboard_t const* b, u8 sq, movelist_t* ml) {
     }
 }
 
-movelist_t get_legal_moves(chessboard_t* b, u8 sq) {
+static void _get_legal_moves(chessboard_t* b, u8 sq, movelist_t* ml) {
+    color_t side = b->st->side;
     movelist_t pseudo = movelist_empty();
-    if (color_on(b, sq) != b->st->side) {
-        return pseudo;
+    if (color_on(b, sq) != side) {
+        return;
     }
     _gen_pseudo_legal(b, sq, &pseudo);
 
-    movelist_t legal = movelist_empty();
     for (u8 i = 0; i < pseudo.count; i++) {
         chessboard_make(b, pseudo.moves[i]);
 
-        u8 king_sq = bitscan_forward(b->kings[!b->st->side]);
-        if (!_is_square_attacked(b, king_sq, b->st->side)) movelist_add(&legal, pseudo.moves[i]);
+        u8 king_sq = bitscan_forward(b->kings[side]);
+        if (!_is_square_attacked(b, king_sq, !side)) movelist_add(ml, pseudo.moves[i]);
 
         chessboard_unmake(b, pseudo.moves[i]);
     }
+}
+
+movelist_t get_legal_moves(chessboard_t* b, u8 sq) {
+    movelist_t legal = movelist_empty();
+    _get_legal_moves(b, sq, &legal);
+    return legal;
+}
+
+movelist_t get_all_legal_moves(chessboard_t* b) {
+    color_t side = b->st->side;
+    movelist_t legal = movelist_empty();
+
+    u64 squares = b->occupied[side];
+    while (squares) {
+        u8 sq = bitscan_forward(squares);
+        squares &= squares - 1;
+        _get_legal_moves(b, sq, &legal);
+    }
+
     return legal;
 }
