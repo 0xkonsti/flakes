@@ -1,0 +1,17 @@
+build/
+out/
+bin/
+
+.vscode/
+.idea/
+
+.cache/
+
+*.o
+*.obj
+*.exe
+*.dll
+*.so
+*.dylib
+
+.env
