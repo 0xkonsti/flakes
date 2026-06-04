@@ -29,7 +29,12 @@ typedef struct {
     u8 halfmove;
     u16 fullmove;
     color_t side;
+
     u64 hash;  // zobrist hash for repetition detection
+
+    bool _lm_valid;  // whether legal_moves is valid for current position
+    movelist_t legal_moves;
+
 } state_t;
 
 // chessboard_t now references a state stack
@@ -56,6 +61,10 @@ void chessboard_clear(chessboard_t* b, state_t* st);
 bool chessboard_set_fen(chessboard_t* b, state_t* st, char const* fen);
 
 void chessboard_print(chessboard_t const* b);
+
+typedef enum { GS_NORMAL, GS_CHECK, GS_CHECKMATE, GS_STALEMATE } gamestate_t;
+
+gamestate_t chessboard_gamestate(chessboard_t const* board);
 
 // statics
 static inline chessboard_t chessboard_new(state_t* st) {

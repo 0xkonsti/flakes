@@ -69,6 +69,7 @@ void chessboard_make(chessboard_t* b, move_t m) {
     assert(b->st + 1 < b->base_st + MAX_PLY);
     *(b->st + 1) = *b->st;
     b->st++;
+    b->st->_lm_valid = false;
 
     color_t side = b->st->side;
     color_t opp = !side;
@@ -198,6 +199,7 @@ void chessboard_clear(chessboard_t* b, state_t* st) {
     st->fullmove = 1;
     st->side = WHITE;
     st->hash = 0;
+    st->_lm_valid = false;
 
     b->st = st;
     b->base_st = st;
@@ -245,3 +247,5 @@ void chessboard_print(chessboard_t const* b) {
     printf("   +----------------");
     printf("\n    A B C D E F G H\n");
 }
+
+gamestate_t chessboard_gamestate(chessboard_t const* b);

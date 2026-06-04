@@ -186,12 +186,23 @@ static void _get_legal_moves(chessboard_t* b, u8 sq, movelist_t* ml) {
 }
 
 movelist_t get_legal_moves(chessboard_t* b, u8 sq) {
-    movelist_t legal = movelist_empty();
-    _get_legal_moves(b, sq, &legal);
-    return legal;
+    movelist_t* legal = get_all_legal_moves(b);
+    movelist_t filtered = movelist_empty();
+
+    for (u8 i = 0; i < legal->count; i++) {
+        if (MOV_FROM(legal->moves[i]) == sq) {
+            movelist_add(&filtered, legal->moves[i]);
+        }
+    }
+
+    return filtered;
 }
 
-movelist_t get_all_legal_moves(chessboard_t* b) {
+movelist_t* get_all_legal_moves(chessboard_t* b) {
+    if (b->st->_lm_valid) {
+        return &b->st->legal_moves;
+    }
+
     color_t side = b->st->side;
     movelist_t legal = movelist_empty();
 
@@ -202,5 +213,8 @@ movelist_t get_all_legal_moves(chessboard_t* b) {
         _get_legal_moves(b, sq, &legal);
     }
 
-    return legal;
+    b->st->legal_moves = legal;
+    b->st->_lm_valid = true;
+
+    return &b->st->legal_moves;
 }
