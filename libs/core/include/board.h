@@ -32,8 +32,8 @@ typedef struct {
 
     u64 hash;  // zobrist hash for repetition detection
 
-    bool _lm_valid;  // whether legal_moves is valid for current position
-    movelist_t legal_moves;
+    bool _lm_valid;  // whether _legal_moves is valid for current position
+    movelist_t _legal_moves;
 
 } state_t;
 
@@ -64,7 +64,9 @@ void chessboard_print(chessboard_t const* b);
 
 typedef enum { GS_NORMAL, GS_CHECK, GS_CHECKMATE, GS_STALEMATE } gamestate_t;
 
-gamestate_t chessboard_gamestate(chessboard_t const* board);
+bool chessboard_is_square_attacked(chessboard_t const* b, u8 sq, color_t by);
+
+gamestate_t chessboard_gamestate(chessboard_t* board);
 
 // statics
 static inline chessboard_t chessboard_new(state_t* st) {

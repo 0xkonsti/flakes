@@ -2,7 +2,9 @@
 #include <assert.h>
 #include <stdio.h>
 #include "fen.h"
+#include "legal.h"
 #include "move.h"
+#include "platform.h"
 #include "zobrist.h"
 
 static piece_t const promo_pieces[] = {QUEEN, KNIGHT, BISHOP, ROOK};
@@ -248,4 +250,31 @@ void chessboard_print(chessboard_t const* b) {
     printf("\n    A B C D E F G H\n");
 }
 
-gamestate_t chessboard_gamestate(chessboard_t const* b);
+bool chessboard_is_square_attacked(chessboard_t const* b, u8 sq, color_t by) {
+    u64 occ = b->all;
+
+    if (knight_move_lut[sq] & b->knights[by]) return true;
+    if (king_move_lut[sq] & b->kings[by]) return true;
+    if (pawn_attack_lut[!by][sq] & b->pawns[by]) return true;
+
+    if (bishop_attacks(sq, occ) & (b->bishops[by] | b->queens[by])) return true;
+    if (rook_attacks(sq, occ) & (b->rooks[by] | b->queens[by])) return true;
+
+    return false;
+}
+
+gamestate_t chessboard_gamestate(chessboard_t* b) {
+    color_t side = b->st->side;
+    movelist_t* legal = get_all_legal_moves(b);
+    u8 king_sq = bitscan_forward(b->kings[side]);
+    bool check = chessboard_is_square_attacked(b, king_sq, !side);
+
+    if (legal->count != 0) {
+        if (check) return GS_CHECK;
+        return GS_NORMAL;
+    }
+
+    if (check) return GS_CHECKMATE;
+
+    return GS_STALEMATE;
+}

@@ -13,4 +13,6 @@ static u8 const color_from_fen[256] = {
     ['p'] = BLACK, ['n'] = BLACK, ['b'] = BLACK, ['r'] = BLACK, ['q'] = BLACK, ['k'] = BLACK,
 };
 
-u8 set_chessboard_from_fen(chessboard_t* b, state_t* st, char const* fen);
+u8 set_chessboard_from_fen(chessboard_t* board, state_t* state, char const* fen);
+
+void fen_of_chessboard_print(chessboard_t const* board, state_t const* state);

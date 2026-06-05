@@ -4,19 +4,6 @@
 #include "move_lut.h"
 #include "platform.h"
 
-static bool _is_square_attacked(chessboard_t const* b, u8 sq, color_t by) {
-    u64 occ = b->all;
-
-    if (knight_move_lut[sq] & b->knights[by]) return true;
-    if (king_move_lut[sq] & b->kings[by]) return true;
-    if (pawn_attack_lut[!by][sq] & b->pawns[by]) return true;
-
-    if (bishop_attacks(sq, occ) & (b->bishops[by] | b->queens[by])) return true;
-    if (rook_attacks(sq, occ) & (b->rooks[by] | b->queens[by])) return true;
-
-    return false;
-}
-
 static void _get_legal_pawn_moves(chessboard_t const* b, u8 sq, movelist_t* moves) {
     color_t side = b->st->side;
     u8 promo_rank = side == WHITE ? 7 : 0;
@@ -138,18 +125,20 @@ static void _get_legal_king_moves(chessboard_t const* b, u8 sq, movelist_t* move
     }
 
     // Casteling: bit messy but does the job...
-    if (!_is_square_attacked(b, sq, !side)) {
+    if (!chessboard_is_square_attacked(b, sq, !side)) {
         u8 cr = b->st->castling;
         if (sq == SQ_E1 && side == WHITE) {
-            if ((cr & 0x1) && !(b->all & (BB(SQ_F1) | BB(SQ_G1))) && !_is_square_attacked(b, SQ_F1, !side))
+            if ((cr & 0x1) && !(b->all & (BB(SQ_F1) | BB(SQ_G1))) && !chessboard_is_square_attacked(b, SQ_F1, !side))
                 movelist_add(moves, move_create(SQ_E1, SQ_G1, MF_CASTLING, 0, KING, NO_PIECE));
-            if ((cr & 0x2) && !(b->all & (BB(SQ_B1) | BB(SQ_C1) | BB(SQ_D1))) && !_is_square_attacked(b, SQ_D1, !side))
+            if ((cr & 0x2) && !(b->all & (BB(SQ_B1) | BB(SQ_C1) | BB(SQ_D1))) &&
+                !chessboard_is_square_attacked(b, SQ_D1, !side))
                 movelist_add(moves, move_create(SQ_E1, SQ_C1, MF_CASTLING, 0, KING, NO_PIECE));
         }
         if (sq == SQ_E8 && side == BLACK) {
-            if ((cr & 0x4) && !(b->all & (BB(SQ_F8) | BB(SQ_G8))) && !_is_square_attacked(b, SQ_F8, !side))
+            if ((cr & 0x4) && !(b->all & (BB(SQ_F8) | BB(SQ_G8))) && !chessboard_is_square_attacked(b, SQ_F8, !side))
                 movelist_add(moves, move_create(SQ_E8, SQ_G8, MF_CASTLING, 0, KING, NO_PIECE));
-            if ((cr & 0x8) && !(b->all & (BB(SQ_B8) | BB(SQ_C8) | BB(SQ_D8))) && !_is_square_attacked(b, SQ_D8, !side))
+            if ((cr & 0x8) && !(b->all & (BB(SQ_B8) | BB(SQ_C8) | BB(SQ_D8))) &&
+                !chessboard_is_square_attacked(b, SQ_D8, !side))
                 movelist_add(moves, move_create(SQ_E8, SQ_C8, MF_CASTLING, 0, KING, NO_PIECE));
         }
     }
@@ -179,7 +168,7 @@ static void _get_legal_moves(chessboard_t* b, u8 sq, movelist_t* ml) {
         chessboard_make(b, pseudo.moves[i]);
 
         u8 king_sq = bitscan_forward(b->kings[side]);
-        if (!_is_square_attacked(b, king_sq, !side)) movelist_add(ml, pseudo.moves[i]);
+        if (!chessboard_is_square_attacked(b, king_sq, !side)) movelist_add(ml, pseudo.moves[i]);
 
         chessboard_unmake(b, pseudo.moves[i]);
     }
@@ -200,7 +189,7 @@ movelist_t get_legal_moves(chessboard_t* b, u8 sq) {
 
 movelist_t* get_all_legal_moves(chessboard_t* b) {
     if (b->st->_lm_valid) {
-        return &b->st->legal_moves;
+        return &b->st->_legal_moves;
     }
 
     color_t side = b->st->side;
@@ -213,8 +202,8 @@ movelist_t* get_all_legal_moves(chessboard_t* b) {
         _get_legal_moves(b, sq, &legal);
     }
 
-    b->st->legal_moves = legal;
+    b->st->_legal_moves = legal;
     b->st->_lm_valid = true;
 
-    return &b->st->legal_moves;
+    return &b->st->_legal_moves;
 }

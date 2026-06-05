@@ -44,5 +44,12 @@ void algebraic_from_move_print(move_t const m, chessboard_t const* b) {
     chessboard_t copy = *b;
     chessboard_make(&copy, m);
 
-    // TODO: check/checkmate indicators
+    gamestate_t gs = chessboard_gamestate(&copy);
+    if (gs == GS_CHECK) {
+        printf("+");
+    } else if (gs == GS_CHECKMATE) {
+        printf("#");
+    }
+
+    chessboard_unmake(&copy, m);
 }

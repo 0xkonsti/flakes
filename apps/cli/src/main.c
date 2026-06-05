@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "algebraic.h"
+#include "board.h"
 #include "core.h"
 #include "legal.h"
 #include "options.h"
@@ -11,6 +12,9 @@
 #define BASE_FEN "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
 static int read(char* buffer, usize b_size) {
+    // TODO: consider using getline() instead of fgets() for better handling of long input
+    // TODO: move to asssertions instead of runtime checks --> read will only be used internally and should be
+    // guaranteed to be called with valid arguments in "production"
     if (b_size == 0) {
         fprintf(stderr, "error: buffer size must be greater than 0\n");
         return 1;
@@ -92,8 +96,10 @@ static int cmd_play(int argc, char** argv) {
         return 1;
     }
 
-    while (1) {  // Game Loop
-        chessboard_print(&b);
+    chessboard_print(&b);
+
+    gamestate_t gs = chessboard_gamestate(&b);
+    while (gs == GS_NORMAL) {  // Game Loop
         printf("\nIts %s's turn!\n", b.st->side == WHITE ? "White" : "Black");
 
         while (1) {  // Input Loop
@@ -138,6 +144,9 @@ static int cmd_play(int argc, char** argv) {
             chessboard_make(&b, m);
             break;
         }
+
+        chessboard_print(&b);
+        gs = chessboard_gamestate(&b);
     }
 
     return 0;
