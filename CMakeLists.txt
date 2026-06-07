@@ -19,4 +19,5 @@ endif()
 
 add_subdirectory(libs/utils)
 add_subdirectory(libs/core)
+add_subdirectory(libs/engine)
 add_subdirectory(apps/cli)

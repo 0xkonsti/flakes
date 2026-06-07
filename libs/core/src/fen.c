@@ -1,4 +1,6 @@
 #include "fen.h"
+#include "defines.h"
+#include "platform.h"
 #include "utils.h"
 #include "zobrist.h"
 
@@ -151,4 +153,10 @@ u8 set_chessboard_from_fen(chessboard_t* b, state_t* st, char const* fen) {
     st->hash = zobrist_hash(b);
 
     return 0;
+}
+
+void fen_of_chessboard_print(chessboard_t const* b, state_t const* st) {
+    UNUSED(b);
+    UNUSED(st);
+    UNIMPLEMENTED("fen_of_chessboard_print is not yet implemented!");
 }

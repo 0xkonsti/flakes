@@ -4,12 +4,15 @@
 #include "algebraic.h"
 #include "board.h"
 #include "core.h"
+#include "engine.h"
 #include "legal.h"
 #include "options.h"
+#include "search.h"
 #include "types.h"
 #include "utils.h"
 
 #define BASE_FEN "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+#define TEST_ANA_FEN "5rk1/1qp2ppp/3p4/1N6/1pP1Pp2/3P1P2/1b3P1P/1Q2R1K1 b - - 1 21"
 
 static int read(char* buffer, usize b_size) {
     // TODO: consider using getline() instead of fgets() for better handling of long input
@@ -48,6 +51,7 @@ static int read(char* buffer, usize b_size) {
 
 static int cmd_help(int argc, char** argv);
 static int cmd_play(int argc, char** argv);
+static int cmd_analyse(int argc, char** argv);
 
 static struct {
     char const* name;
@@ -56,6 +60,7 @@ static struct {
 } cmds[] = {
     {"help", "Show this help message", cmd_help},
     {"play", "Play a game", cmd_play},
+    {"analyse", "Analyse a gamestate", cmd_analyse}
 };
 
 static int usage(void) {
@@ -152,7 +157,38 @@ static int cmd_play(int argc, char** argv) {
     return 0;
 }
 
+int cmd_analyse(int argc, char** argv) {
+    state_t st[MAX_PLY];
+    chessboard_t b = chessboard_new(st);
+
+    options_t options = options_parse(argc, argv);
+    if (!options.valid) {
+        return 1;
+    }
+
+    char const* fen = TEST_ANA_FEN;
+    if (option_is_set(&options.fen)) {
+        fen = option_get(&options.fen);
+    }
+
+    if (!chessboard_set_fen(&b, st, fen)) {
+        printf("error: invalid FEN: '%s'\n", fen);
+        return 1;
+    }
+
+    chessboard_print(&b);
+
+    engine_t engine = {0};
+    engine_init(&engine, &b);
+
+    engine_search(&engine);
+    printf("nodes: %llu\n", search_nodes());
+
+    return 0;
+}
+
 int main(int argc, char** argv) {
+    return cmd_analyse(argc, argv);
     if (argc < 2) {
         return usage();
     }

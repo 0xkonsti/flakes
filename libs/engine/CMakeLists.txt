@@ -1,16 +1,16 @@
-add_executable(cli
-    src/main.c
-    src/options.c
+add_library(engine
+    src/engine.c
+    src/search.c
+    src/static.c
 )
 
-target_link_libraries(cli PRIVATE core)
-target_link_libraries(cli PRIVATE engine)
+target_include_directories(engine PUBLIC include)
+target_link_libraries(engine PUBLIC core)
 
-# Complier Warnings
 if(MSVC)
-    target_compile_options(cli PRIVATE /W4 /arch:AVX2)
+    target_compile_options(engine PRIVATE /W4 /arch:AVX2)
 else()
-    target_compile_options(cli PRIVATE
+    target_compile_options(engine PRIVATE
         -Wall
         -Wextra
         -Wpedantic

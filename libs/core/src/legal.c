@@ -1,6 +1,7 @@
 #include "legal.h"
 #include "board.h"
 #include "defines.h"
+#include "move.h"
 #include "move_lut.h"
 #include "platform.h"
 
@@ -29,7 +30,7 @@ static void _get_legal_pawn_moves(chessboard_t const* b, u8 sq, movelist_t* move
         }
     }
 
-    u64 mask = b->occupied[!side];
+    u64 mask = b->occupied[!side] & ~b->kings[!side];
     if (b->st->ep_sq != EN_PASSANT_NONE) BIT_SET(mask, b->st->ep_sq);
     u64 attacks = pawn_attack_lut[side][sq] & mask;
     while (attacks) {
@@ -62,7 +63,7 @@ static void _get_legal_pawn_moves(chessboard_t const* b, u8 sq, movelist_t* move
 static void _get_legal_knight_moves(chessboard_t const* b, u8 sq, movelist_t* moves) {
     color_t side = b->st->side;
 
-    u64 targets = knight_move_lut[sq] & ~b->occupied[side];
+    u64 targets = knight_move_lut[sq] & ~b->occupied[side] & ~b->kings[!side];
     while (targets) {
         u8 to = bitscan_forward(targets);
         targets &= targets - 1;
@@ -76,7 +77,7 @@ static void _get_legal_knight_moves(chessboard_t const* b, u8 sq, movelist_t* mo
 static void _get_legal_bishop_moves(chessboard_t const* b, u8 sq, movelist_t* moves) {
     color_t side = b->st->side;
 
-    u64 targets = bishop_attacks(sq, b->all) & ~b->occupied[side];
+    u64 targets = bishop_attacks(sq, b->all) & ~b->occupied[side] & ~b->kings[!side];
     while (targets) {
         u8 to = bitscan_forward(targets);
         targets &= targets - 1;
@@ -89,7 +90,7 @@ static void _get_legal_bishop_moves(chessboard_t const* b, u8 sq, movelist_t* mo
 static void _get_legal_rook_moves(chessboard_t const* b, u8 sq, movelist_t* moves) {
     color_t side = b->st->side;
 
-    u64 targets = rook_attacks(sq, b->all) & ~b->occupied[side];
+    u64 targets = rook_attacks(sq, b->all) & ~b->occupied[side] & ~b->kings[!side];
     while (targets) {
         u8 to = bitscan_forward(targets);
         targets &= targets - 1;
@@ -102,7 +103,7 @@ static void _get_legal_rook_moves(chessboard_t const* b, u8 sq, movelist_t* move
 static void _get_legal_queen_moves(chessboard_t const* b, u8 sq, movelist_t* moves) {
     color_t side = b->st->side;
 
-    u64 targets = queen_attacks(sq, b->all) & ~b->occupied[side];
+    u64 targets = queen_attacks(sq, b->all) & ~b->occupied[side] & ~b->kings[!side];
     while (targets) {
         u8 to = bitscan_forward(targets);
         targets &= targets - 1;
@@ -115,7 +116,7 @@ static void _get_legal_queen_moves(chessboard_t const* b, u8 sq, movelist_t* mov
 static void _get_legal_king_moves(chessboard_t const* b, u8 sq, movelist_t* moves) {
     color_t side = b->st->side;
 
-    u64 targets = king_move_lut[sq] & ~b->occupied[side];
+    u64 targets = king_move_lut[sq] & ~b->occupied[side] & ~b->kings[!side];
     while (targets) {
         u8 to = bitscan_forward(targets);
         targets &= targets - 1;
@@ -206,4 +207,17 @@ movelist_t* get_all_legal_moves(chessboard_t* b) {
     b->st->_lm_valid = true;
 
     return &b->st->_legal_moves;
+}
+
+movelist_t get_all_legal_captures(chessboard_t* b) {
+    movelist_t* legal = get_all_legal_moves(b);
+    movelist_t captures = movelist_empty();
+
+    for (u8 i = 0; i < legal->count; i++) {
+        if (MOV_CAPTURED(legal->moves[i]) != NO_PIECE) {
+            movelist_add(&captures, legal->moves[i]);
+        }
+    }
+
+    return captures;
 }
