@@ -12,7 +12,7 @@
 #include "utils.h"
 
 #define BASE_FEN "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
-#define TEST_ANA_FEN "5rk1/1qp2ppp/3p4/1N6/1pP1Pp2/3P1P2/1b3P1P/1Q2R1K1 b - - 1 21"
+#define TEST_ANA_FEN "5rk1/1qp2ppp/3p1b2/1N6/1pP1Pp2/3P1P2/5P1P/1Q2R1K1 w - - 2 22"
 
 static int read(char* buffer, usize b_size) {
     // TODO: consider using getline() instead of fgets() for better handling of long input
@@ -181,7 +181,8 @@ int cmd_analyse(int argc, char** argv) {
     engine_t engine = {0};
     engine_init(&engine, &b);
 
-    engine_search(&engine);
+    move_t best = engine_search(&engine);
+
     printf("nodes: %llu\n", search_nodes());
 
     return 0;
